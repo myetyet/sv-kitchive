@@ -29,6 +29,7 @@ jobs:
       - name: Build project
         run: npm run build
         env:
+          NODE_ENV: production
           PUBLIC_URL: /${{ github.event.repository.name }}
       
       - name: Upload artifact

@@ -15,9 +15,9 @@
     onMount(async () => {
         await supabase.init(async (status) => {
             if (status === true && page.url.pathname === '/login') {
-                await goto('/menus');
+                await goto('./menus');
             } else if (status === false && page.url.pathname !== '/login') {
-                await goto('/login');
+                await goto('./login');
             }
         });
     });

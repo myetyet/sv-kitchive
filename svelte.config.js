@@ -21,6 +21,9 @@ const config = {
         prerender: {
             handleHttpError: 'warn',
             entries: ['*']
+        },
+        paths: {
+            base: process.env.NODE_ENV === 'production' ? '/sv-kitchive' : '/'
         }
     }
 };

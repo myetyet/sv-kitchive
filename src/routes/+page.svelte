@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
+    import { resolve } from '$app/paths';
 
-    goto('/inventory');
+    goto(resolve('/inventory'));
 </script>

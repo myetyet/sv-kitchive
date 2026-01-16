@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
+    import { resolve } from '$app/paths';
     import { onMount, untrack } from 'svelte';
     import { on as addEventListenerTo } from 'svelte/events';
 
@@ -80,7 +81,7 @@
             supabase.login(untrack(() => pin.join('')))
                 .then((status) => {
                     if (status === true) {
-                        goto('/menus');
+                        goto(resolve('/menus'));
                     } else {
                         isLoading = false;
                         pin.length = 0;

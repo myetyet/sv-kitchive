@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
+    import { resolve } from '$app/paths';
     import { page } from '$app/state';
 
     import { Navigation } from '@skeletonlabs/skeleton-svelte';
@@ -13,7 +14,7 @@
         {#each routes as route (route.url)}
             {@const isSelected = page.url.pathname === route.url}
             <button
-                onclick={isSelected ? undefined : () => goto(route.url)}
+                onclick={isSelected ? undefined : () => goto(resolve(route.url))}
                 class="btn flex-1 flex-col items-center gap-1" class:scale-125={isSelected}>
                 <div class="relative inline-block">
                     <!-- {#if route.url === '/menus'}

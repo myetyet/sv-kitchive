@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { page } from '$app/state';
     import { goto } from '$app/navigation';
+    import { resolve } from '$app/paths';
+    import { page } from '$app/state';
 
     import favicon from '$lib/assets/favicon.svg';
     import { emitter } from '$lib/mitt';
@@ -15,9 +16,9 @@
     onMount(async () => {
         await supabase.init(async (status) => {
             if (status === true && page.url.pathname === '/login') {
-                await goto('./menus');
+                await goto(resolve('/menus'));
             } else if (status === false && page.url.pathname !== '/login') {
-                await goto('./login');
+                await goto(resolve('/login'));
             }
         });
     });

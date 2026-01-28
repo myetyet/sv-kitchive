@@ -6,7 +6,8 @@
     import type { InventoryItem, StoragePlace } from '$lib/schema';
     import { supabase } from '$lib/supabase.svelte';
 
-    let { open: showEditDialog = $bindable(), place, item = null, index = -1 }: { open: boolean; place: StoragePlace; item?: InventoryItem | null; index?: number; } = $props();
+    type PropsType = { open: boolean; place: StoragePlace; item?: InventoryItem | null; index?: number; };
+    let { open: showEditDialog = $bindable(), place, item = null, index = -1 }: PropsType = $props();
     let showConfirmationDialog: boolean = $state(false);
     let inputItemName: string = $derived(item?.name ?? '');
     let inputItemQuantity: number | null = $derived(item?.quantity ?? null);

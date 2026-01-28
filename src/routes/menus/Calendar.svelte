@@ -1,16 +1,22 @@
 <script lang="ts">
     import { onMount } from 'svelte';
 
-    import { CalendarDate, type DateValue } from '@internationalized/date';
+    import { CalendarDate, today } from '@internationalized/date';
+    import type { DateValue } from '@internationalized/date'
     import { DatePicker } from '@skeletonlabs/skeleton-svelte';
+    import type { Api as DatePickerApi } from '@zag-js/date-picker';
 
+    import { emitter } from '$lib/mitt';
     import { supabase } from '$lib/supabase.svelte';
 
-    let { date = $bindable(), disabled }: { date: DateValue; disabled: boolean; } = $props();
+    type PropsType = { date: DateValue; disabled: boolean; };
+    let { date = $bindable(), disabled }: PropsType = $props();
 
     let prevYearMonth: DateValue = new CalendarDate(date.year, date.month, 1);
     let isRequesting: boolean = false;
     let highlightedDays: Set<string> = $state(new Set());
+
+    let buttonReturnToToday: HTMLButtonElement | undefined = $state(undefined);
 
     async function fetchDailyIndicators() {
         isRequesting = true;
@@ -28,6 +34,13 @@
         }
     }
 
+    function returnToToday(datePicker: DatePickerApi) {
+        return function() {
+            date = today('Asia/Shanghai');
+            datePicker.selectToday();
+        }
+    }
+
     $effect(() => {
         if (!isRequesting && (date.year !== prevYearMonth.year || date.month !== prevYearMonth.month)) {
             prevYearMonth = new CalendarDate(date.year, date.month, 1);
@@ -36,22 +49,30 @@
     });
 
     onMount(fetchDailyIndicators);
+
+    onMount(() => {
+        emitter.on('calendar:today', () => {
+            buttonReturnToToday?.click();
+        });
+        return () => {
+            emitter.off('calendar:today');
+        };
+    });
 </script>
 
 
 <div class="pt-2 flex justify-center items-center block">
     <DatePicker
         value={[date]} onValueChange={(e) => (date = e.value[0])} {disabled}
-        inline locale="zh-CN" timeZone="Asia/Shanghai" startOfWeek={0} maxView="month">
+        inline view="day" locale="zh-CN" timeZone="Asia/Shanghai" startOfWeek={0}>
         <DatePicker.Content>
             <DatePicker.View view="day">
                 <DatePicker.Context>
                     {#snippet children(datePicker)}
+                        <button onclick={returnToToday(datePicker())} bind:this={buttonReturnToToday} class="absolute h-0 w-0 hidden overflow-hidden pointer-events-none" title="回到今天"></button>
                         <DatePicker.ViewControl>
                             <DatePicker.PrevTrigger />
-                            <DatePicker.ViewTrigger>
-                                <DatePicker.RangeText />
-                            </DatePicker.ViewTrigger>
+                            <DatePicker.RangeText class="btn" />
                             <DatePicker.NextTrigger />
                         </DatePicker.ViewControl>
                         <DatePicker.Table style="border-spacing: calc(var(--spacing) * 2.5) calc(var(--spacing) * 0.5) !important;">
@@ -78,32 +99,6 @@
                                         {/each}
                                     </DatePicker.TableRow>
                                     {/if}
-                                {/each}
-                            </DatePicker.TableBody>
-                        </DatePicker.Table>
-                    {/snippet}
-                </DatePicker.Context>
-            </DatePicker.View>
-            <DatePicker.View view="month">
-                <DatePicker.Context>
-                    {#snippet children(datePicker)}
-                        <DatePicker.ViewControl>
-                            <DatePicker.PrevTrigger />
-                            <DatePicker.ViewTrigger>
-                                <DatePicker.RangeText />
-                            </DatePicker.ViewTrigger>
-                            <DatePicker.NextTrigger />
-                        </DatePicker.ViewControl>
-                        <DatePicker.Table class="flex justify-center">
-                            <DatePicker.TableBody>
-                                {#each datePicker().getMonthsGrid({ columns: 4, format: 'short' }) as months, id (id)}
-                                    <DatePicker.TableRow>
-                                        {#each months as month, id (id)}
-                                            <DatePicker.TableCell value={month.value}>
-                                                <DatePicker.TableCellTrigger>{month.label}</DatePicker.TableCellTrigger>
-                                            </DatePicker.TableCell>
-                                        {/each}
-                                    </DatePicker.TableRow>
                                 {/each}
                             </DatePicker.TableBody>
                         </DatePicker.Table>

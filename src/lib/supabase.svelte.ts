@@ -1,9 +1,8 @@
-import { createClient, type SupabaseClient as _SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '$lib/schema';
 
-
-type SupabaseClient = _SupabaseClient<Database>;
 export type AuthorizationStatus = boolean | null;
 
 export const LSK_SB_URL: string = 'svk-supabase-url';
@@ -13,7 +12,7 @@ export const LSK_SB_USER_EMAIL: string = 'svk-supabase-user-email';
 class Supabase {
     private authorized: AuthorizationStatus = $state(null);
     private clientReady: boolean = $state(false);
-    private client: SupabaseClient | null = null;
+    private client: SupabaseClient<Database> | null = null;
     private userEmail: string = localStorage.getItem(LSK_SB_USER_EMAIL) ?? '';
 
     public get isAuthorized() : AuthorizationStatus {
@@ -24,7 +23,7 @@ class Supabase {
         return this.clientReady;
     }
 
-    public get sbClient() : SupabaseClient {
+    public get sbClient() : SupabaseClient<Database> {
         if (this.client === null) {
             throw new TypeError('Supabase client must be created before accessing.');
         }

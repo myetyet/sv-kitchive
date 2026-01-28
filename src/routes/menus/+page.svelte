@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { today, type DateValue } from '@internationalized/date';
+    import { today } from '@internationalized/date';
+    import type { DateValue } from '@internationalized/date';
 
     import Calendar from './Calendar.svelte';
     import DishList from './DishList.svelte';

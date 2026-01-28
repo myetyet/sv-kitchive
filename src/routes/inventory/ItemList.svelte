@@ -8,7 +8,9 @@
     import AddButton from './AddButton.svelte';
     import ItemCard from './ItemCard.svelte';
 
-    let { place, items = $bindable() }: { place: StoragePlace; items: InventoryItem[]; } = $props();
+    type PropsType = { place: StoragePlace; items: InventoryItem[]; };
+    let { place, items = $bindable() }: PropsType = $props();
+
     let scrollY: number = $state(0);
 
     function compareItems(a: InventoryItem, b: InventoryItem) : number {

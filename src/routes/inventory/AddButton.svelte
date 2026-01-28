@@ -4,7 +4,9 @@
     import type { StoragePlace } from '$lib/schema';
     import EditDialog from './EditDialog.svelte';
 
-    let { scrollY, place }: { scrollY: number; place: StoragePlace; } = $props();
+    type PropsType = { scrollY: number; place: StoragePlace; };
+    let { scrollY, place }: PropsType = $props();
+
     let lastY: number = 0;
     let visible: boolean = $state(true);
     let ticking: boolean = false;

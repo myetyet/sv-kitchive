@@ -4,7 +4,8 @@
     import type { InventoryItem } from '$lib/schema';
     import EditDialog from './EditDialog.svelte';
 
-    let { index, item }: { index: number; item: InventoryItem; } = $props();
+    type PropsType = { index: number; item: InventoryItem; };
+    let { index, item }: PropsType = $props();
 
     let showDialog: boolean = $state(false);
 </script>

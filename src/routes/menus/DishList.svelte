@@ -1,13 +1,15 @@
 <script lang="ts">
-    import type { DateValue } from '@internationalized/date';
-    import { CheckIcon, ChevronDownIcon, ChevronUpIcon, PencilIcon, SaveIcon, Trash2Icon, XIcon } from '@lucide/svelte';
     import { onMount } from 'svelte';
     import { on as addEventListenerTo } from 'svelte/events';
+
+    import type { DateValue } from '@internationalized/date';
+    import { CalendarIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon, PencilIcon, SaveIcon, Trash2Icon, XIcon } from '@lucide/svelte';
 
     import { emitter } from '$lib/mitt';
     import { supabase } from '$lib/supabase.svelte';
 
-    let { date, isEditing = $bindable() }: { date: DateValue; isEditing: boolean; } = $props();
+    type PropsType = { date: DateValue; isEditing: boolean; };
+    let { date, isEditing = $bindable() }: PropsType = $props();
 
     let dishes: string[] = $state([]);
     let _dishes: string[];
@@ -72,10 +74,14 @@
         dishes.push(editingDish);
         editingDish = '';
     }
+
+    function returnToToday() {
+        emitter.emit('calendar:today');
+    }
 </script>
 
 
-<div class="pt-3 px-4 flex justify-end">
+<div class="pt-3 px-4 flex {isEditing ? 'justify-end' : 'justify-between'}">
     {#if isEditing}
         <button type="button" class="btn" onclick={saveDishes} title="保存">
             <SaveIcon class="size-5" />
@@ -84,6 +90,12 @@
             <XIcon class="size-5" />
         </button>
     {:else}
+        <div class="relative inline-flex">
+            <button type="button" class="btn" onclick={returnToToday} title="回到今天">
+                <CalendarIcon class="size-5" />
+            </button>
+            <span class="text-[7px] font-bold absolute top-5/8 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none pointer-events-none">{new Date().getDate()}</span>
+        </div>
         <button type="button" class="btn" onclick={editDishes} title="编辑">
             <PencilIcon class="size-5" />
         </button>

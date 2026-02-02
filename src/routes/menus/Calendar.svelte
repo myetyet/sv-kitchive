@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import type { Attachment } from 'svelte/attachments';
 
-    import { CalendarDate, today } from '@internationalized/date';
+    import { CalendarDate, isToday, today } from '@internationalized/date';
     import type { DateValue } from '@internationalized/date'
     import { DatePicker } from '@skeletonlabs/skeleton-svelte';
     import type { Api as DatePickerApi } from '@zag-js/date-picker';
@@ -15,8 +16,6 @@
     let prevYearMonth: DateValue = new CalendarDate(date.year, date.month, 1);
     let isRequesting: boolean = false;
     let highlightedDays: Set<string> = $state(new Set());
-
-    let buttonReturnToToday: HTMLButtonElement | undefined = $state(undefined);
 
     async function fetchDailyIndicators() {
         isRequesting = true;
@@ -50,14 +49,16 @@
 
     onMount(fetchDailyIndicators);
 
-    onMount(() => {
+    const attachReturnToToday: Attachment<HTMLButtonElement> = (button) => {
         emitter.on('calendar:today', () => {
-            buttonReturnToToday?.click();
+            if (!isToday(date, 'Asia/Shanghai')) {
+                button.click();
+            }
         });
         return () => {
             emitter.off('calendar:today');
         };
-    });
+    };
 </script>
 
 
@@ -69,7 +70,7 @@
             <DatePicker.View view="day">
                 <DatePicker.Context>
                     {#snippet children(datePicker)}
-                        <button onclick={returnToToday(datePicker())} bind:this={buttonReturnToToday} class="absolute h-0 w-0 hidden overflow-hidden pointer-events-none" title="回到今天"></button>
+                        <button onclick={returnToToday(datePicker())} {@attach attachReturnToToday} class="absolute h-0 w-0 hidden overflow-hidden pointer-events-none" title="回到今天"></button>
                         <DatePicker.ViewControl>
                             <DatePicker.PrevTrigger />
                             <DatePicker.RangeText class="btn" />

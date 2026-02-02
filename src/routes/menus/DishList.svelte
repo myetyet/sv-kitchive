@@ -107,7 +107,7 @@
             {#if isEditing}
                 {#each dishes as _, i (i)}
                     <tr>
-                        <td class="w-[10%] ">{i + 1}</td>
+                        <td class="w-[10%]">{i + 1}</td>
                         <td class="w-[55%]">
                             <input class="input text-xs" type="text" bind:value={dishes[i]}>
                         </td>

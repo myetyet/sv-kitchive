@@ -26,19 +26,19 @@
 </svelte:head>
 
 <Tabs defaultValue="chilled" class="h-full flex flex-col">
-    <Tabs.List class="sticky top-0 shrink-0 mb-1 z-10 bg-surface-50-950">
+    <Tabs.List class="shrink-0 mb-1 z-10 flex bg-surface-50-950">
         <Tabs.Trigger class="flex-1" value="chilled">冷藏&nbsp;({items[0].length})</Tabs.Trigger>
         <Tabs.Trigger class="flex-1" value="frozen">冷冻&nbsp;({items[1].length})</Tabs.Trigger>
         <Tabs.Trigger class="flex-1" value="shelf">常温&nbsp;({items[2].length})</Tabs.Trigger>
         <Tabs.Indicator />
     </Tabs.List>
-    <Tabs.Content value="chilled" class="flex-1 relative">
+    <Tabs.Content value="chilled" class="flex flex-1 overflow-hidden">
         <ItemList place={0} bind:items={items[0]} />
     </Tabs.Content>
-    <Tabs.Content value="frozen" class="flex-1 relative">
+    <Tabs.Content value="frozen" class="flex flex-1 overflow-hidden">
         <ItemList place={1} bind:items={items[1]} />
     </Tabs.Content>
-    <Tabs.Content value="shelf" class="flex-1 relative">
+    <Tabs.Content value="shelf" class="flex flex-1 overflow-hidden">
         <ItemList place={2} bind:items={items[2]} />
     </Tabs.Content>
 </Tabs>

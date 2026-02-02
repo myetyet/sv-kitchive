@@ -43,7 +43,7 @@
 </svelte:head>
 
 {#if supabase.isAuthorized !== null}
-    <div class="fixed inset-0 flex flex-col">
+    <div class="fixed inset-0 flex flex-col select-none">
         <main class="flex-1 overflow-hidden">
             {@render children()}
         </main>

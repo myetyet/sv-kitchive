@@ -48,7 +48,14 @@
         if (editingDish.length > 0) {
             addDish();
         }
-        await supabase.sbClient.from('svktv_dishes').upsert({ date: date.toString(), dishes });
+        const dateString = date.toString();
+        if (dishes.length > 0) {
+            await supabase.sbClient.from('svktv_dishes').upsert({ date: dateString, dishes });
+            emitter.emit('dish:changed', { type: 'add', date: dateString });
+        } else {
+            await supabase.sbClient.from('svktv_dishes').delete().eq('date', dateString);
+            emitter.emit('dish:changed', { type: 'delete', date: dateString });
+        }
         isEditing = false;
         _dishes = $state.snapshot(dishes);
     }
@@ -139,7 +146,7 @@
                 {#each dishes as dish, i (dish)}
                     <tr>
                         <td class="w-[10%]">{i + 1}</td>
-                        <td class="w-[55%]">{dish}</td>
+                        <td class="w-[55%] select-text">{dish}</td>
                         <td class="w-[35%]"></td>
                     </tr>
                 {/each}

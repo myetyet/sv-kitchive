@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import type { Attachment } from 'svelte/attachments';
+    import { SvelteSet } from 'svelte/reactivity';
 
     import { CalendarDate, isToday, today } from '@internationalized/date';
     import type { DateValue } from '@internationalized/date'
@@ -13,23 +14,32 @@
     type PropsType = { date: DateValue; disabled: boolean; };
     let { date = $bindable(), disabled }: PropsType = $props();
 
-    let prevYearMonth: DateValue = new CalendarDate(date.year, date.month, 1);
     let isRequesting: boolean = false;
-    let highlightedDays: Set<string> = $state(new Set());
 
-    async function fetchDailyIndicators() {
-        isRequesting = true;
+    const highlightedDays: SvelteSet<string> = new SvelteSet();
+    const queryedYearMonth: Set<string> = new Set();    
+
+    async function fetchDailyIndicators(dateMonthStart: DateValue) {
         try {
-            const gteDate = prevYearMonth.toString();
-            const ltDate = prevYearMonth.add({ months: 1 }).toString();
+            const gteDate = dateMonthStart.toString();
+            const ltDate = dateMonthStart.add({ months: 1 }).toString();
             const { data } = await supabase.sbClient.from('svktv_dishes').select('date').gte('date', gteDate).lt('date', ltDate).gte('count', 1);
             if (data === null) {
                 throw new Error();
             }
-            highlightedDays = new Set(data.map((row) => row.date));
+            queryedYearMonth.add(dateMonthStart.toString());
+            data.forEach((row) => { highlightedDays.add(row.date); });
         } catch (e) {
         } finally {
             isRequesting = false;
+        }
+    }
+
+    function onFocusedDateChanged(focusedDate: DateValue) {
+        const dateMonthStart = new CalendarDate(focusedDate.year, focusedDate.month, 1);
+        if (!isRequesting && !queryedYearMonth.has(dateMonthStart.toString())) {
+            isRequesting = true;
+            fetchDailyIndicators(dateMonthStart);
         }
     }
 
@@ -40,14 +50,22 @@
         }
     }
 
-    $effect(() => {
-        if (!isRequesting && (date.year !== prevYearMonth.year || date.month !== prevYearMonth.month)) {
-            prevYearMonth = new CalendarDate(date.year, date.month, 1);
-            fetchDailyIndicators();
-        }
+    onMount(() => {
+        fetchDailyIndicators(new CalendarDate(date.year, date.month, 1));
     });
 
-    onMount(fetchDailyIndicators);
+    onMount(() => {
+        emitter.on('dish:changed', ({ type, date }) => {
+            if (type === 'add') {
+                highlightedDays.add(date);
+            } else if (type === 'delete') {
+                highlightedDays.delete(date);
+            }
+        });
+        return () => {
+            emitter.off('dish:changed');
+        };
+    });
 
     const attachReturnToToday: Attachment<HTMLButtonElement> = (button) => {
         emitter.on('calendar:today', () => {
@@ -64,7 +82,7 @@
 
 <div class="pt-2 flex justify-center items-center block">
     <DatePicker
-        value={[date]} onValueChange={(e) => (date = e.value[0])} {disabled}
+        value={[date]} onValueChange={(e) => (date = e.value[0])} {disabled} onFocusChange={(e) => { onFocusedDateChanged(e.focusedValue); }}
         inline view="day" locale="zh-CN" timeZone="Asia/Shanghai" startOfWeek={0}>
         <DatePicker.Content>
             <DatePicker.View view="day">

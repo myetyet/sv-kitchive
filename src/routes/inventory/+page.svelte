@@ -12,10 +12,7 @@
     onMount(async () => {
         const { data } = await supabase.sbClient.from('svktv_inventory').select('uid,place,name,expired_at,quantity').in('place', [0, 1, 2]).order('expired_at', { ascending: true });
         if (data !== null) {
-            items = data.reduce((acc, item) => {
-                acc[item.place].push(item);
-                return acc;
-            }, { 0: [] as InventoryItem[], 1: [] as InventoryItem[], 2: [] as InventoryItem[] });
+            items = data.reduce((acc, item) => (acc[item.place].push(item), acc), { 0: [] as InventoryItem[], 1: [] as InventoryItem[], 2: [] as InventoryItem[] });
         };
     });
 </script>

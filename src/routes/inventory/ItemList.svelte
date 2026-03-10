@@ -45,7 +45,7 @@
 </script>
 
 
-<div class="w-full overflow-y-auto flex flex-col gap-4" onscroll={(ev) => scrollY = ev.currentTarget.scrollTop}>
+<div class="w-full overflow-y-auto flex flex-col gap-4" onscroll={(ev) => (scrollY = ev.currentTarget.scrollTop)}>
     {#each items as item, i (item.uid)}
         <ItemCard index={i} {item} />
     {/each}

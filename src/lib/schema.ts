@@ -25,7 +25,7 @@ export interface Database {
                     count?: never;
                 };
                 Update: {
-                    date: string;
+                    date?: string | null;
                     dishes?: string[] | null;
                     count?: never;
                 };
@@ -42,7 +42,7 @@ export interface Database {
                 };
                 Update: {
                     uid?: never;
-                    name: string;
+                    name?: string | null;
                     place?: never;
                     expired_at?: string | null;
                     quantity?: number | null;

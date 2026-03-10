@@ -4,12 +4,14 @@
     import { SvelteSet } from 'svelte/reactivity';
 
     import { CalendarDate, isToday, today } from '@internationalized/date';
-    import type { DateValue } from '@internationalized/date'
+    import { parseDate, type DateValue } from '@internationalized/date'
     import { DatePicker } from '@skeletonlabs/skeleton-svelte';
     import type { Api as DatePickerApi } from '@zag-js/date-picker';
 
     import { emitter } from '$lib/mitt';
     import { supabase } from '$lib/supabase.svelte';
+
+    const timeZone = 'Asia/Shanghai';
 
     type PropsType = { date: DateValue; disabled: boolean; };
     let { date = $bindable(), disabled }: PropsType = $props();
@@ -43,13 +45,6 @@
         }
     }
 
-    function returnToToday(datePicker: DatePickerApi) {
-        return function() {
-            date = today('Asia/Shanghai');
-            datePicker.selectToday();
-        }
-    }
-
     onMount(() => {
         fetchDailyIndicators(new CalendarDate(date.year, date.month, 1));
     });
@@ -67,14 +62,25 @@
         };
     });
 
-    const attachReturnToToday: Attachment<HTMLButtonElement> = (button) => {
-        emitter.on('calendar:today', () => {
-            if (!isToday(date, 'Asia/Shanghai')) {
+    function selectDate(datePicker: DatePickerApi) {
+        return function(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
+            try {
+                const dateToSelect = parseDate(event.currentTarget.dataset['date'] ?? '');
+                date = dateToSelect;
+                datePicker.setValue([dateToSelect]);
+            } catch (e) {}
+        }
+    }
+
+    const attachSelectDate: Attachment<HTMLButtonElement> = (button) => {
+        emitter.on('calendar:select', (dateString) => {
+            if (dateString !== 'today' || !isToday(date, timeZone)) {
+                button.dataset['date'] = dateString === 'today' ? today(timeZone).toString() : dateString;
                 button.click();
             }
         });
         return () => {
-            emitter.off('calendar:today');
+            emitter.off('calendar:select');
         };
     };
 </script>
@@ -83,12 +89,12 @@
 <div class="pt-2 flex justify-center items-center block">
     <DatePicker
         value={[date]} onValueChange={(e) => (date = e.value[0])} {disabled} onFocusChange={(e) => { onFocusedDateChanged(e.focusedValue); }}
-        inline view="day" locale="zh-CN" timeZone="Asia/Shanghai" startOfWeek={0}>
+        inline view="day" locale="zh-CN" {timeZone} startOfWeek={0}>
         <DatePicker.Content>
             <DatePicker.View view="day">
                 <DatePicker.Context>
                     {#snippet children(datePicker)}
-                        <button onclick={returnToToday(datePicker())} {@attach attachReturnToToday} class="absolute h-0 w-0 hidden overflow-hidden pointer-events-none" title="回到今天"></button>
+                        <button onclick={selectDate(datePicker())} {@attach attachSelectDate} class="absolute h-0 w-0 hidden overflow-hidden pointer-events-none" title="回到今天"></button>
                         <DatePicker.ViewControl>
                             <DatePicker.PrevTrigger />
                             <DatePicker.RangeText class="btn" />

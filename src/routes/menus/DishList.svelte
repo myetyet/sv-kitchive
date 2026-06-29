@@ -11,6 +11,9 @@
     type PropsType = { date: DateValue; isEditing: boolean; };
     let { date, isEditing = $bindable() }: PropsType = $props();
 
+    let shift: string = $state('');
+    let shiftSnapshot: string = $state('');
+
     let dishes: string[] = $state([]);
     // svelte-ignore non_reactive_update
     let dishesSnapshot: string[];
@@ -32,8 +35,9 @@
     let isRequesting: boolean = $derived(isSavingEdit || isSavingSwap);
 
     async function selectDishes(dateString: string) {
-        const { data } = await supabase.sbClient.from('svktv_dishes').select('dishes').eq('date', dateString).single();
+        const { data } = await supabase.sbClient.from('svktv_dishes').select('dishes,shift').eq('date', dateString).single();
         dishes = data?.dishes ?? [];
+        shift = (data?.shift ?? null) ?? '';
         isEditing = false;
         editingDish = '';
     }
@@ -59,6 +63,7 @@
     }));
 
     function editDishes() {
+        shiftSnapshot = shift;
         dishesSnapshot = $state.snapshot(dishes);
         isEditing = true;
         showEditErrorHint = false;
@@ -70,12 +75,16 @@
         }
         isSavingEdit = true;
         try {
-            if (dishes.length > 0) {
-                await supabase.sbClient.from('svktv_dishes').upsert({ date: dateString, dishes });
-                emitter.emit('dish:changed', { type: 'add', date: dateString });
-            } else if (dishesSnapshot.length > 0) {
+            if ((shift.length === 0 && dishes.length === 0) && (shiftSnapshot.length > 0 || dishesSnapshot.length > 0)) {
                 await supabase.sbClient.from('svktv_dishes').delete().eq('date', dateString);
-                emitter.emit('dish:changed', { type: 'delete', date: dateString });
+                if (dishesSnapshot.length > 0) {
+                    emitter.emit('dish:changed', { type: 'delete', date: dateString });
+                }
+            } else {
+                await supabase.sbClient.from('svktv_dishes').upsert({ date: dateString, dishes, shift: shift.length > 0 ? shift : null });
+                if (dishes.length > 0) {
+                    emitter.emit('dish:changed', { type: 'add', date: dateString });
+                }
             }
             isEditing = false;
         } catch (e) {
@@ -157,6 +166,16 @@
 <div class="pt-3 px-4 flex justify-between">
     {#if isEditing}
         <div>
+            <select class="select text-xs" bind:value={shift}>
+                <option value=""></option>
+                <option value="主班">主班</option>
+                <option value="短临">短临</option>
+                <option value="决策">决策</option>
+                <option value="综合">综合</option>
+                <option value="科研">科研</option>
+            </select>
+        </div>
+        <div>
             {#if isSavingEdit}
                 <span class="text-primary-500 animate-pulse">菜单保存中……</span>
             {:else if showEditErrorHint}
@@ -188,11 +207,18 @@
             </button>
         </div>
     {:else}
-        <div class="relative inline-flex">
-            <button type="button" class="btn" onclick={returnToToday} title="回到今天">
-                <CalendarIcon class="size-5" />
-            </button>
-            <span class="text-[7px] font-bold absolute top-5/8 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none pointer-events-none">{new Date().getDate()}</span>
+        <div class="flex gap-2">
+            <div class="relative inline-flex">
+                <button type="button" class="btn" onclick={returnToToday} title="回到今天">
+                    <CalendarIcon class="size-5" />
+                </button>
+                <span class="text-[7px] font-bold absolute top-5/8 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none pointer-events-none">{new Date().getDate()}</span>
+            </div>
+            {#if shift.length > 0}
+                <div class="h-full flex items-center justify-center px-2 rounded-md bg-gray-300 dark:bg-gray-700">
+                    <span class="text-base">{shift}</span>
+                </div>
+            {/if}
         </div>
         <div class="flex gap-2">
             <button type="button" class="btn" onclick={swapMenus} title="交换">

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, untrack } from 'svelte';
+    import { onMount } from 'svelte';
     import { on as addEventListenerTo } from 'svelte/events';
 
     import type { DateValue } from '@internationalized/date';
@@ -35,11 +35,12 @@
     let isRequesting: boolean = $derived(isSavingEdit || isSavingSwap);
 
     async function selectDishes(dateString: string) {
-        const { data } = await supabase.sbClient.from('svktv_dishes').select('dishes,shift').eq('date', dateString).single();
-        dishes = data?.dishes ?? [];
-        shift = (data?.shift ?? null) ?? '';
-        isEditing = false;
-        editingDish = '';
+        const data = await Promise.all([
+            supabase.sbClient.from('svktv_dishes').select('dishes').eq('date', dateString).single(),
+            supabase.sbClient.from('svktv_shifts').select('shift').eq('date', dateString).single()
+        ]);
+        dishes = data[0].data?.dishes ?? [];
+        shift = data[1].data?.shift ?? '';
     }
 
     $effect(() => {
@@ -67,6 +68,7 @@
         dishesSnapshot = $state.snapshot(dishes);
         isEditing = true;
         showEditErrorHint = false;
+        editingDish = '';
     }
 
     async function saveDishes() {
@@ -75,17 +77,20 @@
         }
         isSavingEdit = true;
         try {
-            if ((shift.length === 0 && dishes.length === 0) && (shiftSnapshot.length > 0 || dishesSnapshot.length > 0)) {
-                await supabase.sbClient.from('svktv_dishes').delete().eq('date', dateString);
-                if (dishesSnapshot.length > 0) {
-                    emitter.emit('dish:changed', { type: 'delete', date: dateString });
-                }
-            } else {
-                await supabase.sbClient.from('svktv_dishes').upsert({ date: dateString, dishes, shift: shift.length > 0 ? shift : null });
-                if (dishes.length > 0) {
-                    emitter.emit('dish:changed', { type: 'add', date: dateString });
-                }
+            const tasks: PromiseLike<any>[] = [];
+            if (dishes.length > 0) {
+                tasks.push(supabase.sbClient.from('svktv_dishes').upsert({ date: dateString, dishes }));
+                emitter.emit('dish:changed', { type: 'add', date: dateString });
+            } else if (dishesSnapshot.length > 0) {
+                tasks.push(supabase.sbClient.from('svktv_dishes').delete().eq('date', dateString));
+                emitter.emit('dish:changed', { type: 'delete', date: dateString });
             }
+            if (shift.length > 0 && shift !== shiftSnapshot) {
+                tasks.push(supabase.sbClient.from('svktv_shifts').upsert({ date: dateString, shift }));
+            } else if (shift.length === 0 && shiftSnapshot.length > 0) {
+                tasks.push(supabase.sbClient.from('svktv_shifts').delete().eq('date', dateString));
+            }
+            await Promise.all(tasks);
             isEditing = false;
         } catch (e) {
             showEditErrorHint = true;
@@ -158,7 +163,9 @@
         isSwaping = false;
         noTriggerRequest = true;
         dishes = dishesSnapshot;
-        emitter.emit('calendar:select', dateStringSnapshot);
+        queueMicrotask(() => {
+            emitter.emit('calendar:select', dateStringSnapshot);
+        });
     }
 </script>
 
@@ -173,6 +180,7 @@
                 <option value="决策">决策</option>
                 <option value="综合">综合</option>
                 <option value="科研">科研</option>
+                <option value="防汛">防汛</option>
             </select>
         </div>
         <div>

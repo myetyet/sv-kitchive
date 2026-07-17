@@ -24,10 +24,16 @@
         }
 
         scrollY; // inform $effect to re-run when scrollY changes
+        let requestId: number = -1;
         if (!ticking) {
             ticking = true;
-            requestAnimationFrame(update);
+            requestId = requestAnimationFrame(update);
         }
+        return () => {
+            if (requestId > -1) {
+                cancelAnimationFrame(requestId);
+            }
+        };
     });
 </script>
 

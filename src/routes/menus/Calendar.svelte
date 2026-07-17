@@ -19,7 +19,7 @@
     let isRequesting: boolean = false;
 
     const highlightedDays: SvelteSet<string> = new SvelteSet();
-    const queryedYearMonth: Set<string> = new Set();    
+    const queriedYearMonth: Set<string> = new Set();    
 
     async function fetchDailyIndicators(dateMonthStart: DateValue) {
         try {
@@ -29,7 +29,7 @@
             if (data === null) {
                 throw new Error();
             }
-            queryedYearMonth.add(dateMonthStart.toString());
+            queriedYearMonth.add(dateMonthStart.toString());
             data.forEach((row) => { highlightedDays.add(row.date); });
         } catch (e) {
         } finally {
@@ -39,7 +39,7 @@
 
     function onFocusedDateChanged(focusedDate: DateValue) {
         const dateMonthStart = new CalendarDate(focusedDate.year, focusedDate.month, 1);
-        if (!isRequesting && !queryedYearMonth.has(dateMonthStart.toString())) {
+        if (!isRequesting && !queriedYearMonth.has(dateMonthStart.toString())) {
             isRequesting = true;
             fetchDailyIndicators(dateMonthStart);
         }

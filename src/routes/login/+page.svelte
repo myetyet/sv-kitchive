@@ -50,7 +50,7 @@
     async function saveSettings() {
         if (inputSupabaseUrl !== localStorage.getItem(LSK_SB_URL) || inputSupabaseAnonKey !== localStorage.getItem(LSK_SB_ANON_KEY) || inputSupabaseUserEmail !== localStorage.getItem(LSK_SB_USER_EMAIL)) {
             isSavingConfig = true;
-            const status = await supabase.resetClient(inputSupabaseUrl, inputSupabaseAnonKey, inputSupabaseUserEmail)
+            const status = await supabase.resetClient(inputSupabaseUrl, inputSupabaseAnonKey, inputSupabaseUserEmail);
             isSavingConfig = false;
             if (status) {
                 showSaveErrorHint = false;

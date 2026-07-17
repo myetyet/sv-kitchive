@@ -18,18 +18,30 @@ export interface Database {
                     date: string;
                     dishes: string[];
                     count: number;
-                    shift: string | null;
                 };
                 Insert: {
                     date: string;
                     dishes?: string[] | null;
                     count?: never;
-                    shift?: string | null;
                 };
                 Update: {
                     date?: string | null;
                     dishes?: string[] | null;
                     count?: never;
+                };
+                Relationships: never[];
+            };
+            svktv_shifts: {
+                Row: {
+                    date: string;
+                    shift: string | null;
+                };
+                Insert: {
+                    date: string;
+                    shift?: string | null;
+                };
+                Update: {
+                    date?: string | null;
                     shift?: string | null;
                 };
                 Relationships: never[];

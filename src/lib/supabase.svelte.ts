@@ -37,12 +37,13 @@ class Supabase {
             const sbAnonKey = localStorage.getItem(LSK_SB_ANON_KEY) ?? '';
             if (sbUrl.length === 0 || sbAnonKey.length === 0 || this.userEmail.length === 0) {
                 status = false;
-            }
-            try {
-                this.client = createClient(sbUrl, sbAnonKey);
-                this.clientReady = true;
-            } catch (e) {
-                status = false;
+            } else {
+                try {
+                    this.client = createClient(sbUrl, sbAnonKey);
+                    this.clientReady = true;
+                } catch (e) {
+                    status = false;
+                }
             }
         }
         if (this.client !== null) {
@@ -59,6 +60,9 @@ class Supabase {
     public async resetClient(url: string, anonKey: string, userEmail: string) : Promise<boolean> {
         try {
             await this.forceLogout(false);
+            this.client = null;
+            this.clientReady = false;
+            this.authorized = false;
             this.client = createClient(url, anonKey);
             this.clientReady = true;
             this.userEmail = userEmail;
